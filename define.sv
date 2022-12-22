@@ -1,19 +1,10 @@
 //
-//  define.vh
+//  define.sv
 //
 
 
 // プログラムが格納されたディレクトリの絶対パスを指定
-// `define MEM_DATA_PATH "D:/Github/poyo-v/software/Coremark_RV32I_45MHz/"
-// `define MEM_DATA_PATH "D:/Github/poyo-v/software/coremark/"
 `define MEM_DATA_PATH "test/"
-
-// システムクロックの周波数とその半分の値を指定
-//`define SYSCLK_FREQ 45000000
-//`define SYSCLK_FREQ_HALF 22500000
-
-// UARTのbaud rateを指定
-//`define BAUD_RATE 115200
 
 // データメモリの開始アドレスと容量を指定
 `define DMEM_START_ADDR 32'h2000

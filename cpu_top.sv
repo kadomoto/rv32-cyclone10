@@ -8,12 +8,10 @@
 module cpu_top (
     input logic clk,
     input logic rst_n,
-//    input wire uart_rx,
     input logic [3:0] gpi_in,
     output logic [3:0] gpo_out,
     inout [7:0] FT_ADBUS,
     inout [6:0] FT_ACBUS
-//    output wire uart_tx
 );
 
     // reset
@@ -60,7 +58,6 @@ module cpu_top (
     // UART TX
     logic uart_we;
     logic [7:0] uart_data_in;
-    //wire uart_data_out;
     logic send_available;
 
     // UART RX
@@ -310,7 +307,6 @@ module cpu_top (
     // UART
     assign uart_data_in = ex_store_value[7:0];
     assign uart_we = ((ex_alu_result == `UART_TX_ADDR) && ex_is_store) ? `ENABLE : `DISABLE;
-    //assign uart_tx = uart_data_out;
 
     ft232if uart (
         .clock(clk),
@@ -323,22 +319,6 @@ module cpu_top (
         .send_flag(uart_we),
         .send_available
     );
-
-    // uart uart_0 (
-    //     .clk(clk),
-    //     .rst_n(rst_n),
-    //     .wr_data(uart_data_in),
-    //     .wr_en(uart_we),
-    //     .uart_tx(uart_data_out)
-    // );
-
-    // uart_rx uart_rx_0 (
-    //     .clk(clk),
-    //     .rst_n(rst_n),
-    //     .uart_rx(uart_rx),
-    //     .rd_data(uart_rd_data),
-    //     .rd_en(uart_rd_en)
-    // );
 
 
     // GPIO
