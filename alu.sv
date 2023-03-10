@@ -3,8 +3,6 @@
 //
 
 
-`include "define.sv"
-
 module alu (
     input logic [5:0] alucode,
     input logic [31:0] op1,
@@ -18,91 +16,91 @@ module alu (
     logic signed [31:0] signed_alu_result;
 
     // 符号付き計算用
-    assign signed_op1 = op1;
-    assign signed_op2 = op2;
+    assign signed_op1 = signed'(op1);
+    assign signed_op2 = signed'(op2);
     assign signed_alu_result = signed_op1 >>> signed_op2[4:0];
 
     always_comb begin
-        case (alucode)
-            `ALU_LUI: begin
+        unique case (alucode)
+            ALU_LUI: begin
                 alu_result = op2;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_JAL, `ALU_JALR: begin
+            ALU_JAL, ALU_JALR: begin
                 alu_result = op2 + 32'd4;
-                br_taken = `ENABLE;
+                br_taken = ENABLE;
             end
-            `ALU_BEQ: begin
+            ALU_BEQ: begin
                 alu_result = 32'd0;
                 br_taken = (op1 == op2);
             end
-            `ALU_BNE: begin
+            ALU_BNE: begin
                 alu_result = 32'd0;
                 br_taken = (op1 != op2);
             end
-            `ALU_BLT: begin
+            ALU_BLT: begin
                 alu_result = 32'd0;
                 br_taken = (signed_op1 < signed_op2);
             end
-            `ALU_BGE: begin
+            ALU_BGE: begin
                 alu_result = 32'd0;
                 br_taken = (signed_op1 >= signed_op2);
             end
-            `ALU_BLTU: begin
+            ALU_BLTU: begin
                 alu_result = 32'd0;
                 br_taken = (op1 < op2);
             end
-            `ALU_BGEU: begin
+            ALU_BGEU: begin
                 alu_result = 32'd0;
                 br_taken = (op1 >= op2);
             end
-            `ALU_LB, `ALU_LH, `ALU_LW, `ALU_LBU, `ALU_LHU, `ALU_SB, `ALU_SH, `ALU_SW: begin
+            ALU_LB, ALU_LH, ALU_LW, ALU_LBU, ALU_LHU, ALU_SB, ALU_SH, ALU_SW: begin
                 alu_result = op1 + op2;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_ADD: begin
+            ALU_ADD: begin
                 alu_result = op1 + op2;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_SUB: begin
+            ALU_SUB: begin
                 alu_result = op1 - op2;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end 
-            `ALU_SLT: begin
+            ALU_SLT: begin
                 alu_result = (signed_op1 < signed_op2) ? 32'd1 : 32'd0;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_SLTU: begin
+            ALU_SLTU: begin
                 alu_result = (op1 < op2) ? 32'd1 : 32'd0;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_XOR: begin
+            ALU_XOR: begin
                 alu_result = op1 ^ op2;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_OR: begin
+            ALU_OR: begin
                 alu_result = op1 | op2;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_AND: begin
+            ALU_AND: begin
                 alu_result = op1 & op2;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_SLL: begin
+            ALU_SLL: begin
                 alu_result = op1 << op2[4:0];
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_SRL: begin
+            ALU_SRL: begin
                 alu_result = op1 >> op2[4:0];
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
-            `ALU_SRA: begin
+            ALU_SRA: begin
                 alu_result = signed_alu_result;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
             default: begin
                 alu_result = 32'd0;
-                br_taken = `DISABLE;
+                br_taken = DISABLE;
             end
         endcase
     end

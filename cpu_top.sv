@@ -3,8 +3,6 @@
 //
 
 
-`include "define.sv"
-
 module cpu_top (
     input logic clk,
     input logic rst_n,
@@ -16,7 +14,6 @@ module cpu_top (
 
     // reset
     logic rst;
-    assign rst = ~rst_n;
 
     // PC
     logic [31:0] next_PC;
@@ -89,6 +86,8 @@ module cpu_top (
     //====================================================================
     // program counter
     //====================================================================   
+
+    assign rst = ~rst_n;
 
     // ex stageの結果をフォワーディング
     assign next_PC = (rst_n == 1'b0) ? PC + 32'd4 : ex_br_taken ? ex_br_addr + 32'd4 : PC + 32'd4;
@@ -167,12 +166,12 @@ module cpu_top (
     assign ex_srcreg2_value = (regfile_srcreg2_num==5'd0) ? 32'd0 : 
                               (wb_reg_we && (decoder_srcreg2_num == wb_dstreg_num)) ? wb_dstreg_value : regfile_srcreg2_value;
 
-    assign alu_op1 = (ex_aluop1_type == `OP_TYPE_REG) ? ex_srcreg1_value :
-                     (ex_aluop1_type == `OP_TYPE_IMM) ? decoder_imm :
-                     (ex_aluop1_type == `OP_TYPE_PC) ? ex_PC: 32'd0;
-    assign alu_op2 = (ex_aluop2_type == `OP_TYPE_REG) ? ex_srcreg2_value :
-                     (ex_aluop2_type == `OP_TYPE_IMM) ? decoder_imm :
-                     (ex_aluop2_type == `OP_TYPE_PC) ? ex_PC : 32'd0;
+    assign alu_op1 = (ex_aluop1_type == OP_TYPE_REG) ? ex_srcreg1_value :
+                     (ex_aluop1_type == OP_TYPE_IMM) ? decoder_imm :
+                     (ex_aluop1_type == OP_TYPE_PC) ? ex_PC: 32'd0;
+    assign alu_op2 = (ex_aluop2_type == OP_TYPE_REG) ? ex_srcreg2_value :
+                     (ex_aluop2_type == OP_TYPE_IMM) ? decoder_imm :
+                     (ex_aluop2_type == OP_TYPE_PC) ? ex_PC : 32'd0;
 
     alu alu_0 (
         .alucode(alu_alucode),
@@ -182,16 +181,16 @@ module cpu_top (
         .br_taken(ex_br_taken)
     );
 
-    assign ex_store_value = ((ex_alucode == `ALU_SW) || (ex_alucode == `ALU_SH) || (ex_alucode == `ALU_SB)) ? ex_srcreg2_value : 32'd0;
+    assign ex_store_value = ((ex_alucode == ALU_SW) || (ex_alucode == ALU_SH) || (ex_alucode == ALU_SB)) ? ex_srcreg2_value : 32'd0;
 
-    assign ex_br_addr = (ex_alucode==`ALU_JAL) ? ex_PC + decoder_imm :
-                        (ex_alucode==`ALU_JALR) ? alu_op1 + decoder_imm :
-                        ((ex_alucode==`ALU_BEQ) || (ex_alucode==`ALU_BNE) || (ex_alucode==`ALU_BLT) ||
-                         (ex_alucode==`ALU_BGE) || (ex_alucode==`ALU_BLTU) || (ex_alucode==`ALU_BGEU)) ? ex_PC + decoder_imm : 32'd0;
+    assign ex_br_addr = (ex_alucode == ALU_JAL) ? ex_PC + decoder_imm :
+                        (ex_alucode == ALU_JALR) ? alu_op1 + decoder_imm :
+                        ((ex_alucode == ALU_BEQ) || (ex_alucode == ALU_BNE) || (ex_alucode == ALU_BLT) ||
+                         (ex_alucode == ALU_BGE) || (ex_alucode == ALU_BLTU) || (ex_alucode == ALU_BGEU)) ? ex_PC + decoder_imm : 32'd0;
 
     
     // store
-    assign dmem_addr = ex_alu_result - `DMEM_START_ADDR;  // データメモリの読出しアドレスを変換
+    assign dmem_addr = ex_alu_result - DMEM_START_ADDR;  // データメモリの読出しアドレスを変換
 
     function [31:0] dmem_wr_data_sel(
         input is_store,
@@ -202,18 +201,18 @@ module cpu_top (
         
         begin
             if (is_store) begin
-                case (alucode)
-                    `ALU_SW: dmem_wr_data_sel = store_value;
-                    `ALU_SH: begin
-                        case (alu_result)
+                unique case (alucode)
+                    ALU_SW: dmem_wr_data_sel = store_value;
+                    ALU_SH: begin
+                        unique case (alu_result)
                             2'b00: dmem_wr_data_sel = {16'd0, store_value[15:0]};
                             2'b01: dmem_wr_data_sel = {8'd0, store_value[15:0], 8'd0};
                             2'b10: dmem_wr_data_sel = {store_value[15:0], 16'd0};
                             default: dmem_wr_data_sel = {16'd0, store_value[15:0]};
                         endcase
                     end
-                    `ALU_SB: begin
-                        case (alu_result)
+                    ALU_SB: begin
+                        unique case (alu_result)
                             2'b00: dmem_wr_data_sel = {24'd0, store_value[7:0]};
                             2'b01: dmem_wr_data_sel = {16'd0, store_value[7:0], 8'd0};
                             2'b10: dmem_wr_data_sel = {8'd0, store_value[7:0], 16'd0};
@@ -240,18 +239,18 @@ module cpu_top (
         
         begin
             if (is_store) begin
-                case (alucode)
-                    `ALU_SW: dmem_we_sel = 4'b1111;
-                    `ALU_SH: begin
-                        case (alu_result)
+                unique case (alucode)
+                    ALU_SW: dmem_we_sel = 4'b1111;
+                    ALU_SH: begin
+                        unique case (alu_result)
                             2'b00: dmem_we_sel = 4'b0011;
                             2'b01: dmem_we_sel = 4'b0110;
                             2'b10: dmem_we_sel = 4'b1100;
                             default: dmem_we_sel = 4'b0000;
                         endcase
                     end
-                    `ALU_SB: begin
-                        case (alu_result)
+                    ALU_SB: begin
+                        unique case (alu_result)
                             2'b00: dmem_we_sel = 4'b0001;
                             2'b01: dmem_we_sel = 4'b0010;
                             2'b10: dmem_we_sel = 4'b0100;
@@ -268,7 +267,7 @@ module cpu_top (
     endfunction
 
     // メモリマップのデータメモリにあたるアドレスが指定されていれば書き込み有効化
-    assign dmem_we = (dmem_addr <= `DMEM_SIZE) ? dmem_we_sel(ex_is_store, ex_alucode, ex_alu_result[1:0]) : 4'd0;
+    assign dmem_we = (dmem_addr <= DMEM_SIZE) ? dmem_we_sel(ex_is_store, ex_alucode, ex_alu_result[1:0]) : 4'd0;
 
 
     dmem #(.byte_num(2'b00)) dmem_0 (
@@ -306,11 +305,11 @@ module cpu_top (
 
     // UART
     assign uart_data_in = ex_store_value[7:0];
-    assign uart_we = ((ex_alu_result == `UART_TX_ADDR) && ex_is_store) ? `ENABLE : `DISABLE;
+    assign uart_we = ((ex_alu_result == UART_TX_ADDR) && ex_is_store) ? ENABLE : DISABLE;
 
     ft232if uart (
-        .clock(clk),
-        .reset(rst),
+        .clk(clk),
+        .rst(rst),
         .FT_ADBUS,
         .FT_ACBUS,
         .rcv_data(uart_rd_data),
@@ -324,7 +323,7 @@ module cpu_top (
     // GPIO
     assign gpi_data_in = {4'd0, gpi_in};  // デフォルトでは汎用入力は4bit
     assign gpo_data_in = ex_store_value[7:0];
-    assign gpo_we = ((ex_alu_result == `GPO_ADDR) && ex_is_store) ? `ENABLE : `DISABLE;
+    assign gpo_we = ((ex_alu_result == GPO_ADDR) && ex_is_store) ? ENABLE : DISABLE;
     assign gpo_out = gpo_data_out[3:0];  // デフォルトでは汎用出力は4bit
 
     gpi gpi_0 (
@@ -354,9 +353,9 @@ module cpu_top (
     // パイプラインレジスタ
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            wb_reg_we <= `DISABLE;
+            wb_reg_we <= DISABLE;
             wb_dstreg_num <= 5'd0;
-            wb_is_load <= `DISABLE;
+            wb_is_load <= DISABLE;
             wb_alucode <= 6'd0;
             wb_alu_result <= 32'd0;
         end else begin
@@ -390,46 +389,46 @@ module cpu_top (
         
         begin
             if (is_load) begin
-                case (alucode)
-                    `ALU_LW: begin
-                        if (alu_result == `HARDWARE_COUNTER_ADDR) begin
+                unique case (alucode)
+                    ALU_LW: begin
+                        if (alu_result == HARDWARE_COUNTER_ADDR) begin
                             load_value_sel = hc_value;
-                        end else if (alu_result == `UART_RX_ADDR) begin
+                        end else if (alu_result == UART_RX_ADDR) begin
                             load_value_sel = uart_value;
-                        end else if (alu_result == `GPI_ADDR) begin
+                        end else if (alu_result == GPI_ADDR) begin
                             load_value_sel = gpi_value;
-                        end else if (alu_result == `GPO_ADDR) begin
+                        end else if (alu_result == GPO_ADDR) begin
                             load_value_sel = gpo_value;
                         end else begin
                             load_value_sel = {dmem_rd_data_3, dmem_rd_data_2, dmem_rd_data_1, dmem_rd_data_0};
                         end
                     end
-                    `ALU_LH: begin
-                        case (alu_result[1:0])
+                    ALU_LH: begin
+                        unique case (alu_result[1:0])
                             2'b00: load_value_sel = {{16{dmem_rd_data_1[7]}}, dmem_rd_data_1, dmem_rd_data_0};
                             2'b01: load_value_sel = {{16{dmem_rd_data_2[7]}}, dmem_rd_data_2, dmem_rd_data_1};
                             2'b10: load_value_sel = {{16{dmem_rd_data_3[7]}}, dmem_rd_data_3, dmem_rd_data_2};
                             default: load_value_sel = {{16{dmem_rd_data_1[7]}}, dmem_rd_data_1, dmem_rd_data_0};
                         endcase
                     end
-                    `ALU_LB: begin
-                        case (alu_result[1:0])
+                    ALU_LB: begin
+                        unique case (alu_result[1:0])
                             2'b00: load_value_sel = {{24{dmem_rd_data_0[7]}}, dmem_rd_data_0};
                             2'b01: load_value_sel = {{24{dmem_rd_data_1[7]}}, dmem_rd_data_1};
                             2'b10: load_value_sel = {{24{dmem_rd_data_2[7]}}, dmem_rd_data_2};
                             2'b11: load_value_sel = {{24{dmem_rd_data_3[7]}}, dmem_rd_data_3};
                         endcase
                     end
-                    `ALU_LHU: begin
-                        case (alu_result[1:0])
+                    ALU_LHU: begin
+                        unique case (alu_result[1:0])
                             2'b00: load_value_sel = {16'd0, dmem_rd_data_1, dmem_rd_data_0};
                             2'b01: load_value_sel = {16'd0, dmem_rd_data_2, dmem_rd_data_1};
                             2'b10: load_value_sel = {16'd0, dmem_rd_data_3, dmem_rd_data_2};
                             default: load_value_sel = {16'd0, dmem_rd_data_1, dmem_rd_data_0};
                         endcase
                     end
-                    `ALU_LBU: begin
-                        case (alu_result[1:0])
+                    ALU_LBU: begin
+                        unique case (alu_result[1:0])
                             2'b00: load_value_sel = {24'd0, dmem_rd_data_0};
                             2'b01: load_value_sel = {24'd0, dmem_rd_data_1};
                             2'b10: load_value_sel = {24'd0, dmem_rd_data_2};

@@ -17,7 +17,7 @@ module hardware_counter (
         if (!rst_n) begin
             cycles <= 32'd0;
         end else begin
-            cycles <= cycles + 1;
+            cycles <= cycles + 32'd1;
         end
     end
 

@@ -3,8 +3,6 @@
 //
 
 
-`include "define.sv"
-
 module dmem #(parameter byte_num = 2'b00) (
     input logic clk,
     input logic we,
@@ -17,11 +15,11 @@ module dmem #(parameter byte_num = 2'b00) (
     logic [10:0] addr_sync;  // 8KiBを表現するための11bitアドレス(下位2bitはここでは考慮しない)
     
     initial begin
-        case (byte_num)
-            2'b00: $readmemh({`MEM_DATA_PATH, "data0.hex"}, mem);
-            2'b01: $readmemh({`MEM_DATA_PATH, "data1.hex"}, mem);
-            2'b10: $readmemh({`MEM_DATA_PATH, "data2.hex"}, mem);
-            2'b11: $readmemh({`MEM_DATA_PATH, "data3.hex"}, mem);
+        unique case (byte_num)
+            2'b00: $readmemh({MEM_DATA_PATH, "data0.hex"}, mem);
+            2'b01: $readmemh({MEM_DATA_PATH, "data1.hex"}, mem);
+            2'b10: $readmemh({MEM_DATA_PATH, "data2.hex"}, mem);
+            2'b11: $readmemh({MEM_DATA_PATH, "data3.hex"}, mem);
         endcase
     end      
    
